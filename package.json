@@ -1,0 +1,53 @@
+{
+  "name": "@beecorp/livechat-widget",
+  "version": "1.0.0",
+  "description": "Beecorp LiveChat Widget - Embeddable chat widget with chatflow and live agent support",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.23.0",
+    "@babel/preset-react": "^7.23.0",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@types/react": "^18.2.0",
+    "rollup": "^4.9.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.2",
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "react",
+    "livechat",
+    "chat",
+    "widget",
+    "chatbot",
+    "live-agent",
+    "customer-support"
+  ],
+  "author": "Beecorp",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mehmers/livechat-widget"
+  },
+  "bugs": {
+    "url": "https://github.com/mehmers/livechat-widget/issues"
+  },
+  "homepage": "https://github.com/mehmers/livechat-widget#readme"
+}
