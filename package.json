@@ -1,6 +1,6 @@
 {
   "name": "@beecorp/livechat-widget",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Beecorp LiveChat Widget - Embeddable chat widget with chatflow and live agent support",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
