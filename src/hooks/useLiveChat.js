@@ -27,12 +27,12 @@ export function useLiveChat(config) {
     try {
       const savedUser = localStorage.getItem(userKey);
       const savedSession = localStorage.getItem(sessionKey);
-      
+
       if (savedUser) {
         const userData = JSON.parse(savedUser);
         setUser(userData);
         setIsInitialized(true);
-        
+
         if (savedSession) {
           const sessionData = JSON.parse(savedSession);
           setSessionId(sessionData.sessionId);
@@ -57,7 +57,10 @@ export function useLiveChat(config) {
       // Fetch widget config
       apiRef.current.getConfig()
         .then(data => setWidgetConfig(data.config))
-        .catch(err => console.error('Failed to load widget config:', err));
+        .catch(err => {
+          console.error('Failed to load widget config:', err);
+          setError(err.message || 'Konfigürasyon yüklenemedi. Lütfen tokeninizi kontrol edin.');
+        });
     }
   }, [config.apiUrl, config.token]);
 
@@ -70,11 +73,11 @@ export function useLiveChat(config) {
             setMessages(data.messages);
             setSessionId(data.session_id);
             setIsLiveAgentMode(data.is_live_agent_mode || false);
-            
+
             // Set current step options and input type
             setCurrentOptions(data.current_options || []);
             setCurrentInputType(data.current_input_type || 'text');
-            
+
             // Update localStorage with latest session info
             localStorage.setItem(sessionKey, JSON.stringify({
               sessionId: data.session_id,
@@ -134,11 +137,11 @@ export function useLiveChat(config) {
         setMessages(historyData.messages);
         setSessionId(historyData.session_id);
         setIsLiveAgentMode(historyData.is_live_agent_mode || false);
-        
+
         // Set current step options and input type
         setCurrentOptions(historyData.current_options || []);
         setCurrentInputType(historyData.current_input_type || 'text');
-        
+
         // Save session info
         localStorage.setItem(sessionKey, JSON.stringify({
           sessionId: historyData.session_id,
@@ -336,7 +339,7 @@ export function useLiveChat(config) {
     setError(null);
     setIsInitialized(false);
     setUser(null);
-    
+
     // Clear localStorage
     localStorage.removeItem(userKey);
     localStorage.removeItem(sessionKey);

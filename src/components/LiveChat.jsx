@@ -271,8 +271,8 @@ export function LiveChat({
             </div>
             <div className="lc-header-actions">
               {isInitialized && (
-                <button 
-                  className="lc-reset-btn" 
+                <button
+                  className="lc-reset-btn"
                   onClick={resetChat}
                   title="Yeni Sohbet"
                 >
@@ -287,12 +287,21 @@ export function LiveChat({
 
           {/* Body */}
           <div className="lc-body">
+            {/* Error */}
+            {error && (
+              <div className="lc-error-banner" onClick={() => setError(null)}>
+                {error}
+              </div>
+            )}
+
             {!isInitialized ? (
-              <RegistrationForm
-                onSubmit={handleRegistration}
-                isLoading={isLoading}
-                primaryColor={effectivePrimaryColor}
-              />
+              !error && (
+                <RegistrationForm
+                  onSubmit={handleRegistration}
+                  isLoading={isLoading}
+                  primaryColor={effectivePrimaryColor}
+                />
+              )
             ) : (
               <>
                 {/* Messages */}
@@ -311,7 +320,7 @@ export function LiveChat({
                       <span></span>
                     </div>
                   )}
-                  
+
                   {/* Options - inside messages container for better positioning */}
                   {currentOptions.length > 0 && !hasEnded && (
                     <OptionsSelector
@@ -320,16 +329,9 @@ export function LiveChat({
                       disabled={isLoading}
                     />
                   )}
-                  
+
                   <div ref={messagesEndRef} />
                 </div>
-
-                {/* Error */}
-                {error && (
-                  <div className="lc-error-banner" onClick={() => setError(null)}>
-                    {error}
-                  </div>
-                )}
 
                 {/* Ended Message */}
                 {hasEnded && (
