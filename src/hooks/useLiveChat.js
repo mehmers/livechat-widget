@@ -13,6 +13,7 @@ export function useLiveChat(config) {
   const [currentInputType, setCurrentInputType] = useState('text');
   const [widgetConfig, setWidgetConfig] = useState(null);
   const [hasEnded, setHasEnded] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
 
   const apiRef = useRef(null);
   const pollingRef = useRef(null);
@@ -59,7 +60,9 @@ export function useLiveChat(config) {
         .then(data => setWidgetConfig(data.config))
         .catch(err => {
           console.error('Failed to load widget config:', err);
-          setError(err.message || 'Konfigürasyon yüklenemedi. Lütfen tokeninizi kontrol edin.');
+          const msg = err.message || 'Konfigürasyon yüklenemedi. Lütfen tokeninizi kontrol edin.';
+          setError(msg);
+          setConnectionError(msg);
         });
     }
   }, [config.apiUrl, config.token]);
@@ -362,6 +365,7 @@ export function useLiveChat(config) {
     sendFile,
     resetChat,
     setError,
+    connectionError,
   };
 }
 

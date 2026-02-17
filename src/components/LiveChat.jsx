@@ -37,6 +37,14 @@ const RefreshIcon = () => (
   </svg>
 );
 
+const WarningIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+    <line x1="12" y1="9" x2="12" y2="13"></line>
+    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+  </svg>
+);
+
 // Registration Form Component
 function RegistrationForm({ onSubmit, isLoading, primaryColor }) {
   const [formData, setFormData] = useState({
@@ -212,6 +220,7 @@ export function LiveChat({
     sendFile,
     resetChat,
     setError,
+    connectionError,
   } = useLiveChat({ apiUrl, token });
 
   // Use widget config if available
@@ -287,57 +296,96 @@ export function LiveChat({
 
           {/* Body */}
           <div className="lc-body">
-            {/* Error */}
-            {error && (
-              <div className="lc-error-banner" onClick={() => setError(null)}>
-                {error}
+            {/* Connection Error View */}
+            {connectionError ? (
+              <div className="lc-connection-error-view" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                textAlign: 'center',
+                padding: '20px',
+                color: '#71717a'
+              }}>
+                <div style={{ color: '#EAB308', marginBottom: '16px' }}>
+                  <WarningIcon />
+                </div>
+                <h4 style={{ margin: '0 0 8px 0', color: '#18181b' }}>Bağlantı Hatası</h4>
+                <p style={{ fontSize: '14px', margin: 0 }}>BeeMessenger API'sine bağlanamadı.</p>
+                <p style={{ fontSize: '12px', marginTop: '8px', opacity: 0.8, backgroundColor: '#f4f4f5', padding: '8px', borderRadius: '4px', width: '100%' }}>
+                  {connectionError}
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{
+                    marginTop: '20px',
+                    padding: '8px 16px',
+                    border: '1px solid #e4e4e7',
+                    borderRadius: '6px',
+                    background: 'white',
+                    cursor: 'pointer',
+                    fontSize: '13px'
+                  }}
+                >
+                  Sayfayı Yenile
+                </button>
               </div>
-            )}
-
-            {!isInitialized ? (
-              !error && (
-                <RegistrationForm
-                  onSubmit={handleRegistration}
-                  isLoading={isLoading}
-                  primaryColor={effectivePrimaryColor}
-                />
-              )
             ) : (
               <>
-                {/* Messages */}
-                <div className="lc-messages">
-                  {messages.map((msg) => (
-                    <Message
-                      key={msg.id}
-                      message={msg}
+                {/* Regular Error Banner (for non-blocking errors) */}
+                {error && !connectionError && (
+                  <div className="lc-error-banner" onClick={() => setError(null)}>
+                    {error}
+                  </div>
+                )}
+
+                {!isInitialized ? (
+                  !error && (
+                    <RegistrationForm
+                      onSubmit={handleRegistration}
+                      isLoading={isLoading}
                       primaryColor={effectivePrimaryColor}
                     />
-                  ))}
-                  {isLoading && (
-                    <div className="lc-typing">
-                      <span></span>
-                      <span></span>
-                      <span></span>
+                  )
+                ) : (
+                  <>
+                    {/* Messages */}
+                    <div className="lc-messages">
+                      {messages.map((msg) => (
+                        <Message
+                          key={msg.id}
+                          message={msg}
+                          primaryColor={effectivePrimaryColor}
+                        />
+                      ))}
+                      {isLoading && (
+                        <div className="lc-typing">
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
+                      )}
+
+                      {/* Options - inside messages container for better positioning */}
+                      {currentOptions.length > 0 && !hasEnded && (
+                        <OptionsSelector
+                          options={currentOptions}
+                          onSelect={handleOptionSelect}
+                          disabled={isLoading}
+                        />
+                      )}
+
+                      <div ref={messagesEndRef} />
                     </div>
-                  )}
 
-                  {/* Options - inside messages container for better positioning */}
-                  {currentOptions.length > 0 && !hasEnded && (
-                    <OptionsSelector
-                      options={currentOptions}
-                      onSelect={handleOptionSelect}
-                      disabled={isLoading}
-                    />
-                  )}
-
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Ended Message */}
-                {hasEnded && (
-                  <div className="lc-ended-banner">
-                    Sohbet sonlandı. Teşekkür ederiz!
-                  </div>
+                    {/* Ended Message */}
+                    {hasEnded && (
+                      <div className="lc-ended-banner">
+                        Sohbet sonlandı. Teşekkür ederiz!
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
@@ -387,9 +435,9 @@ export function LiveChat({
       <button
         className="lc-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
-        style={{ backgroundColor: effectivePrimaryColor }}
+        style={{ backgroundColor: connectionError ? '#EAB308' : effectivePrimaryColor }}
       >
-        {isOpen ? <CloseIcon /> : <ChatIcon />}
+        {isOpen ? <CloseIcon /> : (connectionError ? <WarningIcon /> : <ChatIcon />)}
       </button>
     </div>
   );
