@@ -17,6 +17,9 @@ export function useLiveChat(config) {
 
   const apiRef = useRef(null);
   const pollingRef = useRef(null);
+  const wsRef = useRef(null);
+  const wsReconnectRef = useRef(null);
+  const seenIdsRef = useRef(new Set());
 
   // Storage keys
   const storageKey = `livechat_${config.token}`;
@@ -94,19 +97,93 @@ export function useLiveChat(config) {
     }
   }, [isInitialized, user?.id, sessionKey]);
 
-  // Polling for live agent messages
+  // WebSocket subscriber — agent reply / mode change push
+  useEffect(() => {
+    if (!user?.id || !config.apiUrl || !config.token) return undefined;
+
+    // http(s)://host[:port]  →  ws(s)://host:8080
+    let wsUrl;
+    try {
+      const u = new URL(config.apiUrl);
+      const proto = u.protocol === 'https:' ? 'wss:' : 'ws:';
+      const port = config.wsPort || 8080;
+      wsUrl = `${proto}//${u.hostname}:${port}`;
+    } catch (e) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const connect = () => {
+      if (cancelled) return;
+      let ws;
+      try { ws = new WebSocket(wsUrl); } catch (e) { return; }
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        ws.send(
+          JSON.stringify({
+            command: 'livechat:join',
+            token: config.token,
+            external_user_id: user.id,
+          }),
+        );
+      };
+
+      ws.onmessage = (ev) => {
+        let data;
+        try { data = JSON.parse(ev.data); } catch (e) { return; }
+        if (data.type === 'livechat:message' && data.message) {
+          const msg = data.message;
+          if (seenIdsRef.current.has(msg.id)) return;
+          seenIdsRef.current.add(msg.id);
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
+        } else if (data.type === 'livechat:mode') {
+          setIsLiveAgentMode(data.mode === 'live_agent');
+        }
+      };
+
+      ws.onclose = () => {
+        if (cancelled) return;
+        // exponential-ish reconnect: 2s
+        wsReconnectRef.current = setTimeout(connect, 2000);
+      };
+
+      ws.onerror = () => {
+        try { ws.close(); } catch (e) {}
+      };
+    };
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      if (wsReconnectRef.current) clearTimeout(wsReconnectRef.current);
+      if (wsRef.current) {
+        try { wsRef.current.close(); } catch (e) {}
+        wsRef.current = null;
+      }
+    };
+  }, [user?.id, config.apiUrl, config.token, config.wsPort]);
+
+  // Polling fallback — WS yoksa veya disconnect ise live agent mesajları kaçmasın diye
   useEffect(() => {
     if (isLiveAgentMode && user?.id) {
       pollingRef.current = setInterval(async () => {
         try {
           const data = await apiRef.current.getHistory(user.id);
           if (data.messages) {
+            // dedup against seenIds
+            data.messages.forEach((m) => seenIdsRef.current.add(m.id));
             setMessages(data.messages);
           }
         } catch (err) {
           console.error('Polling error:', err);
         }
-      }, 3000);
+      }, 8000); // WS varsa 8sn yeterli (eskiden 3sn, sadece fallback)
     }
 
     return () => {
