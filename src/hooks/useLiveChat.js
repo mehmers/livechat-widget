@@ -101,13 +101,20 @@ export function useLiveChat(config) {
   useEffect(() => {
     if (!user?.id || !config.apiUrl || !config.token) return undefined;
 
-    // http(s)://host[:port]  →  ws(s)://host:8080
+    // http(s)://host[:port]  →  ws(s)://host[:port]/livechat
+    // (Backend WebSocket'i HTTP ile AYNI portta /livechat path'inde dinliyor.)
+    // Geriye-doneuk: config.wsUrl tam URL olarak override edilebilir.
     let wsUrl;
     try {
-      const u = new URL(config.apiUrl);
-      const proto = u.protocol === 'https:' ? 'wss:' : 'ws:';
-      const port = config.wsPort || 8080;
-      wsUrl = `${proto}//${u.hostname}:${port}`;
+      if (config.wsUrl) {
+        wsUrl = config.wsUrl;
+      } else {
+        const u = new URL(config.apiUrl);
+        const proto = u.protocol === 'https:' ? 'wss:' : 'ws:';
+        // config.wsPort verildiyse onu kullan (legacy), yoksa apiUrl'in portunu kullan
+        const portPart = config.wsPort ? `:${config.wsPort}` : (u.port ? `:${u.port}` : '');
+        wsUrl = `${proto}//${u.hostname}${portPart}/livechat`;
+      }
     } catch (e) {
       return undefined;
     }
